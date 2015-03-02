@@ -39,7 +39,7 @@ import com.google.common.base.Preconditions;
 
 public class DefaultIDPConfiguration implements IDPConfiguration
 {
-	private final static String SAML20_PROTOCOL = "urn:oasis:names:tc:SAML:2.0:protocol";
+	private static final String SAML20_PROTOCOL = "urn:oasis:names:tc:SAML:2.0:protocol";
 
 	private final EntityDescriptor localEntity;
 	private final SignatureTrustEngine trustEngine;
@@ -68,7 +68,6 @@ public class DefaultIDPConfiguration implements IDPConfiguration
 	public SignatureTrustEngine getSignatureTrustEngine(){
 		return trustEngine;
 	}
-
 
 	@Override
 	public AuthzService getAuthzServiceByLocation(

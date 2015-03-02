@@ -22,7 +22,7 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -42,7 +42,9 @@ import org.opensaml.xacml.ctx.RequestType;
 import org.opensaml.xacml.ctx.ResponseType;
 import org.opensaml.xacml.profile.saml.XACMLAuthzDecisionQueryType;
 import org.opensaml.xml.Configuration;
+import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.parse.BasicParserPool;
+import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.security.CriteriaSet;
 import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.SecurityHelper;
@@ -51,6 +53,7 @@ import org.opensaml.xml.security.criteria.EntityIDCriteria;
 import org.opensaml.xml.security.criteria.UsageCriteria;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
+import org.opensaml.xml.signature.SignatureException;
 import org.opensaml.xml.signature.Signer;
 import org.opensaml.xml.validation.ValidationException;
 import org.slf4j.Logger;
@@ -63,11 +66,11 @@ import org.xacml4j.v30.Entity;
 import org.xacml4j.v30.RequestContext;
 import org.xacml4j.v30.ResponseContext;
 import org.xacml4j.v30.SubjectAttributes;
+import org.xacml4j.v30.XacmlSyntaxException;
 import org.xacml4j.v30.marshal.jaxb.Xacml20RequestContextUnmarshaller;
 import org.xacml4j.v30.marshal.jaxb.Xacml20ResponseContextMarshaller;
 import org.xacml4j.v30.pdp.PolicyDecisionPoint;
 import org.xacml4j.v30.types.StringExp;
-
 
 public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 
@@ -195,7 +198,7 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 		return true;
 	}
 
-	public Document performXacmlRequest(String issuer, Document reqDom) throws Exception {
+	public Document performXacmlRequest(String issuer, Document reqDom) throws IOException, XMLParserException {
 		try {
 			RequestContext xacmlReq = xacmlRequest20Unmarshaller.unmarshal(reqDom);
 			xacmlReq = addIssuerToRequest(issuer, xacmlReq);
@@ -206,16 +209,25 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 			Document resDom = parserPool.newDocument();
 			xacmlResponse20Unmarshaller.marshal(xacmlRes, new DOMResult(resDom));
 			return resDom;
-		} catch (Exception e) {
+		} catch (XacmlSyntaxException e) {
+			if (log.isDebugEnabled()) {
+				log.debug(e.getMessage(), e);
+			}
+			throw e;
+		} catch (IOException e) {
+			if (log.isDebugEnabled()) {
+				log.debug(e.getMessage(), e);
+			}
+			throw e;
+		} catch (XMLParserException e) {
 			if (log.isDebugEnabled()) {
 				log.debug(e.getMessage(), e);
 			}
 			throw e;
 		}
-
 	}
 
-	private void signResponse(Response response) throws Exception {
+	private void signResponse(Response response) throws SecurityException, MarshallingException, SignatureException {
 		Signature dsig = (Signature) Configuration
 				.getBuilderFactory()
 				.getBuilder(Signature.DEFAULT_ELEMENT_NAME)

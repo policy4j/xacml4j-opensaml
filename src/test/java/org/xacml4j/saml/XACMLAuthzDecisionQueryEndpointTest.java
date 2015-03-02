@@ -65,7 +65,6 @@ import org.xacml4j.v30.pdp.PolicyDecisionPoint;
 
 import com.google.common.io.Closeables;
 
-
 @ContextConfiguration(locations={"classpath:testApplicationContext.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
 public class XACMLAuthzDecisionQueryEndpointTest

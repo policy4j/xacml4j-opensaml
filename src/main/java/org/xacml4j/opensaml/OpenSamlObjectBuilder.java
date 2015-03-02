@@ -30,6 +30,7 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -91,7 +92,7 @@ import org.w3c.dom.Node;
 
 import com.google.common.base.Preconditions;
 
-public class OpenSamlObjectBuilder {
+public final class OpenSamlObjectBuilder {
 	/** Private constructor for utility class */
 	private OpenSamlObjectBuilder() {}
 
@@ -111,7 +112,6 @@ public class OpenSamlObjectBuilder {
 	private static final SAMLObjectBuilder<Subject> subjectBuilder;
 	private static final XMLObjectBuilder<Signature> signatureBuilder;
 	private static final SAMLObjectBuilder<XACMLAuthzDecisionQueryType> xacml20SamlAuthzQueryBuilder;
-
 
 	private static final XACMLAuthzDecisionQueryTypeUnmarshaller xacml20SamlAuthzQueryUnmarshaller;
 	private static final SAMLObjectBuilder<XACMLAuthzDecisionStatementType> xacml20SamlAuthzStatementBuilder;
@@ -136,7 +136,6 @@ public class OpenSamlObjectBuilder {
 		marshallerFactory = Configuration.getMarshallerFactory();
 
 		assertionBuilder = makeSamlObjectBuilder(Assertion.DEFAULT_ELEMENT_NAME);
-
 
 		audienceBuilder = makeSamlObjectBuilder(Audience.DEFAULT_ELEMENT_NAME);
 		audienceRestrictionBuilder = makeSamlObjectBuilder(AudienceRestriction.DEFAULT_ELEMENT_NAME);
@@ -203,7 +202,6 @@ public class OpenSamlObjectBuilder {
 		return b;
 	}
 
-
 	@SuppressWarnings("unchecked")
 	private static <T extends XMLObject> XMLObjectBuilder<T> makeXmlObjectBuilder(
 			QName name) {
@@ -230,7 +228,7 @@ public class OpenSamlObjectBuilder {
 	}
 
 	public static void serialize(Node e, OutputStream out,
-			boolean identOutput, boolean ommitXmlDecl) throws Exception {
+			boolean identOutput, boolean ommitXmlDecl) throws TransformerException {
 
 		Preconditions.checkState(e != null);
 		Transformer serializer = transformerFactory.newTransformer();
@@ -243,12 +241,12 @@ public class OpenSamlObjectBuilder {
 		serializer.transform(source, result);
 	}
 
-	public static void serialize(Node xml, OutputStream out) throws Exception
+	public static void serialize(Node xml, OutputStream out) throws TransformerException
 	{
 		serialize(xml, out, false, false);
 	}
 
-	public static void serialize(XMLObject xml, OutputStream out) throws Exception
+	public static void serialize(XMLObject xml, OutputStream out) throws TransformerException, MarshallingException
 	{
 		Marshaller m = Configuration.getMarshallerFactory().getMarshaller(xml);
 		Preconditions.checkState(m != null);
@@ -365,7 +363,6 @@ public class OpenSamlObjectBuilder {
 		return response;
 	}
 
-
 	public static Assertion makeXacml20AuthzDecisionAssertion(String issuer,
 			RequestType xacml20Request, ResponseType xacml20Response)
 	{
@@ -398,13 +395,13 @@ public class OpenSamlObjectBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends SAMLObject> T unmarshall(Element source) throws Exception
+	public static <T extends SAMLObject> T unmarshall(Element source) throws UnmarshallingException
 	{
 		Unmarshaller u = Configuration.getUnmarshallerFactory().getUnmarshaller(source);
 		return (T)u.unmarshall(source);
 	}
 
-	public static Element marshall(SAMLObject o) throws Exception
+	public static Element marshall(SAMLObject o) throws MarshallingException
 	{
 		Marshaller m = Configuration.getMarshallerFactory().getMarshaller(o);
 		return m.marshall(o);
