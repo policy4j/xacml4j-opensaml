@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  #%L
+  XACML/OpenSAML Integration
+  %%
+  Copyright (C) 2009 - 2014 Xacml4J.org
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Lesser Public License for more details.
+  
+  You should have received a copy of the GNU General Lesser Public
+  License along with this program.  If not, see
+  <http://www.gnu.org/licenses/lgpl-3.0.html>.
+  #L%
+  -->
+
+<md:EntitiesDescriptor
+		xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="urn:oasis:names:tc:SAML:2.0:metadata http://docs.oasis-open.org/security/saml/v2.0/saml-schema-metadata-2.0.xsd">
+	<md:EntityDescriptor entityID="https://idp.example.com/" ID="JneL1Y60uiUodD4Uhpt78l47ATW">
+		<md:IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+			<md:KeyDescriptor use="signing">
+				<ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+					<ds:X509Data>
+						<ds:X509Certificate>
+							MIICUzCCAbygAwIBAgIEU9sHXDANBgkqhkiG9w0BAQUFADBuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTlkxETAPBgNVBAcTCE5ldyBZb3JrMRowGAYDVQQKExF0ZXN0LW9yZ2FuaXphdGlvbjEQMA4GA1UECxMHdGVzdC1vdTERMA8GA1UEAxMIdGVzdC1pZHAwHhcNMTQwODAxMDMxOTU2WhcNMTQxMDMwMDMxOTU2WjBuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTlkxETAPBgNVBAcTCE5ldyBZb3JrMRowGAYDVQQKExF0ZXN0LW9yZ2FuaXphdGlvbjEQMA4GA1UECxMHdGVzdC1vdTERMA8GA1UEAxMIdGVzdC1pZHAwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJVovCtXwhtDFR6s0uDA4nD30nzhOcP/PBmKqSxFVVbe3xdcc8ftL9fwcy3j2Jw2OIioiv9OvJr0qjhsAblUC6IxzZXdIiFbLsigRhlypFlMM3HpmgyYXl7lBrrCMv0fZZCugZFDSpmfDkxLoKuBcIGupepBPiw8dLpm2Vk/p/4PAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAa3k4cwoYNe6tzPV2IrQ8dSk2b4GRIXlCIf8457f0iUIrO0e/aXclHVToVVa5nglHtrbYOkoXbK6Ma4r60BVdIvJa7x1igI2Hd2l7ma6ONY11IJzmV2C3y6bmQ/wu/i0MEa+xMQyyGaAU+hXtx/hcD6XX6dbT3tI2WqUCKZLyjn8=
+						</ds:X509Certificate>
+					</ds:X509Data>
+				</ds:KeyInfo>
+			</md:KeyDescriptor>
+			<md:SingleLogoutService Location="https://idp.example.com/slo.endpoint" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"/>
+			<md:SingleSignOnService Location="https://idp.example.com/sso.endpoint" Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"/>
+		</md:IDPSSODescriptor>
+		<md:PDPDescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+			<md:KeyDescriptor use="signing">
+				<ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+					<ds:X509Data>
+						<ds:X509Certificate>
+							MIICUzCCAbygAwIBAgIEU9sHXDANBgkqhkiG9w0BAQUFADBuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTlkxETAPBgNVBAcTCE5ldyBZb3JrMRowGAYDVQQKExF0ZXN0LW9yZ2FuaXphdGlvbjEQMA4GA1UECxMHdGVzdC1vdTERMA8GA1UEAxMIdGVzdC1pZHAwHhcNMTQwODAxMDMxOTU2WhcNMTQxMDMwMDMxOTU2WjBuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTlkxETAPBgNVBAcTCE5ldyBZb3JrMRowGAYDVQQKExF0ZXN0LW9yZ2FuaXphdGlvbjEQMA4GA1UECxMHdGVzdC1vdTERMA8GA1UEAxMIdGVzdC1pZHAwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJVovCtXwhtDFR6s0uDA4nD30nzhOcP/PBmKqSxFVVbe3xdcc8ftL9fwcy3j2Jw2OIioiv9OvJr0qjhsAblUC6IxzZXdIiFbLsigRhlypFlMM3HpmgyYXl7lBrrCMv0fZZCugZFDSpmfDkxLoKuBcIGupepBPiw8dLpm2Vk/p/4PAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAa3k4cwoYNe6tzPV2IrQ8dSk2b4GRIXlCIf8457f0iUIrO0e/aXclHVToVVa5nglHtrbYOkoXbK6Ma4r60BVdIvJa7x1igI2Hd2l7ma6ONY11IJzmV2C3y6bmQ/wu/i0MEa+xMQyyGaAU+hXtx/hcD6XX6dbT3tI2WqUCKZLyjn8=
+						</ds:X509Certificate>
+					</ds:X509Data>
+				</ds:KeyInfo>
+			</md:KeyDescriptor>
+			<md:AuthzService Location="https://authz.example.com/api/xacml" Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP"/>
+		</md:PDPDescriptor>
+	</md:EntityDescriptor>
+</md:EntitiesDescriptor>

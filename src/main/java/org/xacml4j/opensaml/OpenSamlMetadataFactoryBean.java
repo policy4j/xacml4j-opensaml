@@ -24,24 +24,50 @@ package org.xacml4j.opensaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Timer;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+
 import org.joda.time.DateTime;
+import org.opensaml.saml2.metadata.provider.ChainingMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
+import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
 import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.xml.sax.SAXException;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataProvider> {
 
-	private org.springframework.core.io.Resource metadata;
+    private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+	private Collection<org.springframework.core.io.Resource> metadata;
 
-	public void setLocation(org.springframework.core.io.Resource location){
-		this.metadata = location;
+	public void setLocation(org.springframework.core.io.Resource resource) throws IOException{
+		this.metadata = Sets.newHashSet();
+		if (resource != null) {
+			metadata.add(resource);
+		}
+	}
+
+	public void setLocations(List<String> locations) throws XPathExpressionException, TransformerException, ParserConfigurationException, SAXException, IOException{
+		this.metadata = Sets.newHashSet();
+        for (String resourceLocation : locations) {
+        	if (resourceLocation != null) {
+        		Collections.addAll(metadata, resourcePatternResolver.getResources(resourceLocation));
+        	}
+        }
 	}
 
 	@Override
@@ -50,18 +76,25 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 	}
 
 	@Override
-	protected MetadataProvider createInstance() throws Exception {
+	protected MetadataProvider createInstance() throws MetadataProviderException {
 		Preconditions.checkState(metadata != null);
-		ResourceBackedMetadataProvider mdp = new ResourceBackedMetadataProvider(
-				new SpringResourceWrapper(metadata),
-				new Timer(true),
-				Integer.MAX_VALUE
-				);
+		ResourceBackedMetadataProvider mdp = null;
+		ChainingMetadataProvider cmp = new ChainingMetadataProvider();
 		BasicParserPool pool = new BasicParserPool();
 		pool.setNamespaceAware(true);
-		mdp.setParserPool(pool);
-		mdp.initialize();
-		return mdp;
+
+		for (org.springframework.core.io.Resource provider : metadata) {
+			mdp = new ResourceBackedMetadataProvider(
+					new SpringResourceWrapper(provider),
+					new Timer(true),
+					Integer.MAX_VALUE
+					);
+			mdp.setParserPool(pool);
+			mdp.initialize();
+			cmp.addMetadataProvider(mdp);
+		}
+
+		return cmp;
 	}
 
 	public static class SpringResourceWrapper implements Resource {
