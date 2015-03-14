@@ -22,7 +22,11 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
+import java.io.IOException;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.core.io.Resource;
@@ -34,7 +38,7 @@ public class KeyStoreFactory implements FactoryBean<KeyStore> {
 	private String ksPassword;
 
 	@Override
-	public KeyStore getObject() throws Exception {
+	public KeyStore getObject() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 		KeyStore ks = KeyStore.getInstance(ksType);
 		ks.load(ksLocation.getInputStream(), ksPassword.toCharArray());
 		return ks;

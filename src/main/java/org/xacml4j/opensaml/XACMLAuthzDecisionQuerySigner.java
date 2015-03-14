@@ -22,23 +22,32 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyStore;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.RequestAbstractType;
 import org.opensaml.xacml.profile.saml.XACMLAuthzDecisionQueryType;
 import org.opensaml.xml.Configuration;
+import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.io.UnmarshallingException;
+import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.SecurityHelper;
 import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.x509.KeyStoreX509CredentialAdapter;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
+import org.opensaml.xml.signature.SignatureException;
 import org.opensaml.xml.signature.Signer;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 public class XACMLAuthzDecisionQuerySigner
 {
@@ -46,8 +55,7 @@ public class XACMLAuthzDecisionQuerySigner
 
 	public XACMLAuthzDecisionQuerySigner(KeyStore ks,
 			String signingKeyName,
-			String signingKeyPassword)
-			throws Exception {
+			String signingKeyPassword) throws ConfigurationException {
 		DefaultBootstrap.bootstrap();
 		this.credential = new KeyStoreX509CredentialAdapter(
 				ks,
@@ -55,7 +63,7 @@ public class XACMLAuthzDecisionQuerySigner
 				signingKeyPassword.toCharArray());
 	}
 
-	public void signRequest(InputStream request, OutputStream signedRequest) throws Exception {
+	public void signRequest(InputStream request, OutputStream signedRequest) throws SAXException, IOException, ParserConfigurationException, UnmarshallingException, TransformerException, MarshallingException, SecurityException, SignatureException {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 	    Document doc = dbf.newDocumentBuilder().parse(request);
@@ -64,7 +72,7 @@ public class XACMLAuthzDecisionQuerySigner
 	    OpenSamlObjectBuilder.serialize(xacmlSamlQuery, signedRequest);
 	}
 
-	public void signRequest(RequestAbstractType response) throws Exception {
+	public void signRequest(RequestAbstractType response) throws SecurityException, MarshallingException, SignatureException {
 
 		Signature dsig = (Signature) Configuration.getBuilderFactory()
 	        .getBuilder(Signature.DEFAULT_ELEMENT_NAME)

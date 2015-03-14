@@ -65,9 +65,10 @@ import org.xacml4j.v30.pdp.PolicyDecisionPoint;
 
 import com.google.common.io.Closeables;
 
-@ContextConfiguration(locations={"classpath:testApplicationContext.xml"})
+
+@ContextConfiguration(locations={"classpath:testMultipleMetadataProvidersApplicationContext.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
-public class XACMLAuthzDecisionQueryEndpointTest
+public class XACMLAuthzMultipleMetadataProvidersTest
 {
 	@Autowired
 	private IDPConfiguration idpConfiguration;

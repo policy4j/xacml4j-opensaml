@@ -26,8 +26,14 @@
 	xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<bean id="idpMetadata" class="org.xacml4j.opensaml.OpenSamlMetadataFactoryBean"
-		  p:location="classpath:metadata.xml"/>
+	<bean id="idpMetadata" class="org.xacml4j.opensaml.OpenSamlMetadataFactoryBean">
+		<property name="locations">
+			<list>
+				<value>classpath:metadata/**/idp*-metadata.xml</value>
+				<value>classpath:metadata/**/sp*-metadata.xml</value>
+			</list>
+		</property>
+	</bean>
 
 	<bean id="idpConfig" class="org.xacml4j.opensaml.DefaultIDPConfiguration">
 		<constructor-arg value="https://idp.example.com/"/>
