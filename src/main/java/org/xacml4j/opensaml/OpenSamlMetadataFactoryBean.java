@@ -49,7 +49,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataProvider> {
 
@@ -58,14 +58,14 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 	private boolean bootStrapped = false;
 
 	public void setLocation(org.springframework.core.io.Resource resource) throws IOException{
-		this.metadata = Sets.newHashSet();
+		this.metadata = Lists.newLinkedList();
 		if (resource != null) {
 			metadata.add(resource);
 		}
 	}
 
 	public void setLocations(List<String> locations) throws XPathExpressionException, TransformerException, ParserConfigurationException, SAXException, IOException{
-		this.metadata = Sets.newHashSet();
+		this.metadata = Lists.newLinkedList();
         for (String resourceLocation : locations) {
         	if (resourceLocation != null) {
         		Collections.addAll(metadata, resourcePatternResolver.getResources(resourceLocation));
@@ -81,8 +81,8 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 	@Override
 	protected MetadataProvider createInstance() throws MetadataProviderException, ConfigurationException {
 		if (!bootStrapped) {
-				DefaultBootstrap.bootstrap();
-				bootStrapped=true;
+			DefaultBootstrap.bootstrap();
+			bootStrapped=true;
 		}
 		Preconditions.checkState(metadata != null);
 		ResourceBackedMetadataProvider mdp = null;
