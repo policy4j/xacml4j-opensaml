@@ -34,12 +34,14 @@ import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.joda.time.DateTime;
+import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.metadata.provider.ChainingMetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProvider;
 import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider;
 import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
+import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.parse.BasicParserPool;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -53,6 +55,7 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 
     private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 	private Collection<org.springframework.core.io.Resource> metadata;
+	private boolean bootStrapped = false;
 
 	public void setLocation(org.springframework.core.io.Resource resource) throws IOException{
 		this.metadata = Sets.newHashSet();
@@ -76,7 +79,11 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 	}
 
 	@Override
-	protected MetadataProvider createInstance() throws MetadataProviderException {
+	protected MetadataProvider createInstance() throws MetadataProviderException, ConfigurationException {
+		if (!bootStrapped) {
+				DefaultBootstrap.bootstrap();
+				bootStrapped=true;
+		}
 		Preconditions.checkState(metadata != null);
 		ResourceBackedMetadataProvider mdp = null;
 		ChainingMetadataProvider cmp = new ChainingMetadataProvider();
@@ -93,7 +100,6 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 			mdp.initialize();
 			cmp.addMetadataProvider(mdp);
 		}
-
 		return cmp;
 	}
 
