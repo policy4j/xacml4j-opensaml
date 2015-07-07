@@ -56,6 +56,7 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
     private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 	private Collection<org.springframework.core.io.Resource> metadata;
 	private boolean bootStrapped = false;
+	private Timer timer = new Timer(true);
 
 	public void setLocation(org.springframework.core.io.Resource resource) throws IOException{
 		this.metadata = Lists.newLinkedList();
@@ -93,7 +94,7 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 		for (org.springframework.core.io.Resource provider : metadata) {
 			mdp = new ResourceBackedMetadataProvider(
 					new SpringResourceWrapper(provider),
-					new Timer(true),
+					timer,
 					Integer.MAX_VALUE
 					);
 			mdp.setParserPool(pool);
