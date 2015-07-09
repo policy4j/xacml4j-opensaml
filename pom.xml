@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>org.xacml4j</groupId>
 	<artifactId>xacml-opensaml</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>XACML/OpenSAML Integration</name>
 
