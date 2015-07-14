@@ -10,12 +10,12 @@ package org.xacml4j.opensaml;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -54,7 +54,7 @@ import com.google.common.collect.Lists;
 
 public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataProvider> implements DisposableBean {
 
-    private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
+	private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 	private Collection<org.springframework.core.io.Resource> metadata;
 	private boolean bootStrapped = false;
 	private Timer timer = new Timer(true);
@@ -67,13 +67,13 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 		}
 	}
 
-	public void setLocations(List<String> locations) throws XPathExpressionException, TransformerException, ParserConfigurationException, SAXException, IOException{
+	public void setLocations(List<String> locations) throws XPathExpressionException, TransformerException, ParserConfigurationException, SAXException, IOException {
 		this.metadata = Lists.newLinkedList();
-        for (String resourceLocation : locations) {
-        	if (resourceLocation != null) {
-        		Collections.addAll(metadata, resourcePatternResolver.getResources(resourceLocation));
-        	}
-        }
+		for (String resourceLocation : locations) {
+			if (resourceLocation != null) {
+				Collections.addAll(metadata, resourcePatternResolver.getResources(resourceLocation));
+			}
+		}
 	}
 
 	@Override
@@ -88,17 +88,16 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 			bootStrapped=true;
 		}
 		Preconditions.checkState(metadata != null);
-		ResourceBackedMetadataProvider mdp = null;
 		cmp = new ChainingMetadataProvider();
 		BasicParserPool pool = new BasicParserPool();
 		pool.setNamespaceAware(true);
 
 		for (org.springframework.core.io.Resource provider : metadata) {
-			mdp = new ResourceBackedMetadataProvider(
+			ResourceBackedMetadataProvider mdp = new ResourceBackedMetadataProvider(
 					new SpringResourceWrapper(provider),
 					timer,
 					Integer.MAX_VALUE
-					);
+			);
 			mdp.setParserPool(pool);
 			mdp.initialize();
 			cmp.addMetadataProvider(mdp);
