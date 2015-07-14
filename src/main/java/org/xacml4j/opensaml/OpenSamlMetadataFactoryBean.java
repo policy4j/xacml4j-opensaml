@@ -43,6 +43,7 @@ import org.opensaml.util.resource.Resource;
 import org.opensaml.util.resource.ResourceException;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.parse.BasicParserPool;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -51,12 +52,13 @@ import org.xml.sax.SAXException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataProvider> {
+public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataProvider> implements DisposableBean {
 
     private final ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 	private Collection<org.springframework.core.io.Resource> metadata;
 	private boolean bootStrapped = false;
 	private Timer timer = new Timer(true);
+	private ChainingMetadataProvider cmp = null;
 
 	public void setLocation(org.springframework.core.io.Resource resource) throws IOException{
 		this.metadata = Lists.newLinkedList();
@@ -87,7 +89,7 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 		}
 		Preconditions.checkState(metadata != null);
 		ResourceBackedMetadataProvider mdp = null;
-		ChainingMetadataProvider cmp = new ChainingMetadataProvider();
+		cmp = new ChainingMetadataProvider();
 		BasicParserPool pool = new BasicParserPool();
 		pool.setNamespaceAware(true);
 
@@ -135,5 +137,12 @@ public class OpenSamlMetadataFactoryBean extends AbstractFactoryBean<MetadataPro
 		@Override public String getLocation() {
 			return source.getDescription();
 		}
+	}
+
+	@Override
+	public void destroy() throws Exception {
+		timer.cancel();
+		cmp.destroy();
+		metadata.clear();
 	}
 }
