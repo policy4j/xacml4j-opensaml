@@ -28,7 +28,6 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.same;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -153,7 +152,7 @@ public class XACMLAuthzDecisionQueryEndpointTest
 		XMLUtils.outputDOMc14nWithComments(query, bos);
 
 		XACMLAuthzDecisionQueryType xacmlSamlQuery = OpenSamlObjectBuilder.unmarshallXacml20AuthzDecisionQuery(
-				query.getDocumentElement());
+			query.getDocumentElement());
 		Capture<RequestContext> captureRequest = new Capture<RequestContext>();
 		expect(pdp.decide(capture(captureRequest))).andReturn(ResponseContext
 			.builder()
@@ -170,6 +169,34 @@ public class XACMLAuthzDecisionQueryEndpointTest
 		assertThat(response.getStatus().getStatusCode().getValue(), is(StatusCode.SUCCESS_URI));
 		log.debug("Response signature credential: {}", response.getSignature().getSigningCredential());
 		log.debug("Expected signing credential: {}", expectedSigningCredential);
+		assertThat(response.getSignature().getSigningCredential(), is(expectedSigningCredential));
+
+		control.verify();
+	}
+
+	@Test
+	public void testDeprecatedConstructorIsBackwardsCompatible() throws Exception {
+		XACMLAuthzDecisionQueryEndpoint decisionEndpoint = new XACMLAuthzDecisionQueryEndpoint(
+				idpConfiguration, pdp);
+
+		Document query = parse("TestXacmlSamlRequest-nosignature.xml");
+		new ApacheXMLDsigGenerator().signSamlRequest(query.getDocumentElement(), spPrivateKey, spPublicKey);
+
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		XMLUtils.outputDOMc14nWithComments(query, bos);
+
+		XACMLAuthzDecisionQueryType xacmlSamlQuery = OpenSamlObjectBuilder
+				.unmarshallXacml20AuthzDecisionQuery(query.getDocumentElement());
+		Capture<RequestContext> captureRequest = new Capture<RequestContext>();
+		expect(pdp.decide(capture(captureRequest)))
+				.andReturn(ResponseContext.builder().result(createIndeterminateProcessingError()).build());
+		Credential expectedSigningCredential = idpConfiguration.getSigningCredentials().get(0);
+
+		control.replay();
+		Response response = decisionEndpoint.handle(xacmlSamlQuery);
+
+		assertThat(response, is(notNullValue()));
+		assertThat(response.getStatus().getStatusCode().getValue(), is(StatusCode.SUCCESS_URI));
 		assertThat(response.getSignature().getSigningCredential(), is(expectedSigningCredential));
 
 		control.verify();

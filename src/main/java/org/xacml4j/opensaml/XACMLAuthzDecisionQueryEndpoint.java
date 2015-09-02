@@ -94,7 +94,7 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 	public XACMLAuthzDecisionQueryEndpoint(
 			IDPConfiguration idpConfig,
 			PolicyDecisionPoint pdp) {
-		this(idpConfig, pdp, null);
+		this(idpConfig, pdp, AlwaysFirstSigningCredentialSelector.instance());
 	}
 
 	public XACMLAuthzDecisionQueryEndpoint(IDPConfiguration idpConfig, PolicyDecisionPoint pdp,
