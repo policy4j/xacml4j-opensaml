@@ -22,6 +22,8 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
+import java.util.List;
+
 import org.opensaml.saml2.metadata.AuthzService;
 import org.opensaml.saml2.metadata.EntityDescriptor;
 import org.opensaml.xml.security.credential.Credential;
@@ -44,8 +46,16 @@ public interface IDPConfiguration {
 	/**
 	 * Returns credential used for response signing
 	 * @return credential used for response signing
+	 * @deprecated see {@link #getSigningCredentials()}
 	 */
+	@Deprecated
 	Credential getSigningCredential();
+
+	/**
+	 * Returns a list of available credentials for response signing.
+	 * @return a list of available credentials for response signing
+	 */
+	List<Credential> getSigningCredentials();
 
 	/**
 	 * Authorization service implementation for given location URL
