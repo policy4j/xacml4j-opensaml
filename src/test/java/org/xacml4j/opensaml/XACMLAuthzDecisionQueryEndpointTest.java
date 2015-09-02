@@ -1,4 +1,4 @@
-package org.xacml4j.saml;
+package org.xacml4j.opensaml;
 
 /*
  * #%L
@@ -22,10 +22,13 @@ package org.xacml4j.saml;
  * #L%
  */
 
+import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.same;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -48,14 +51,13 @@ import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.xacml.profile.saml.XACMLAuthzDecisionQueryType;
+import org.opensaml.xml.security.credential.Credential;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.w3c.dom.Document;
-import org.xacml4j.opensaml.IDPConfiguration;
-import org.xacml4j.opensaml.OpenSamlObjectBuilder;
-import org.xacml4j.opensaml.XACMLAuthzDecisionQueryEndpoint;
-import org.xacml4j.opensaml.XACMLAuthzDecisionQuerySigner;
 import org.xacml4j.v30.Decision;
 import org.xacml4j.v30.RequestContext;
 import org.xacml4j.v30.ResponseContext;
@@ -65,15 +67,17 @@ import org.xacml4j.v30.pdp.PolicyDecisionPoint;
 
 import com.google.common.io.Closeables;
 
-
-@ContextConfiguration(locations={"classpath:testMultipleMetadataProvidersApplicationContext.xml"})
+@ContextConfiguration(locations={"classpath:testApplicationContext.xml"})
 @RunWith(SpringJUnit4ClassRunner.class)
-public class XACMLAuthzMultipleMetadataProvidersTest
+public class XACMLAuthzDecisionQueryEndpointTest
 {
+	private static final Logger log = LoggerFactory.getLogger(XACMLAuthzDecisionQueryEndpointTest.class);
+
 	@Autowired
 	private IDPConfiguration idpConfiguration;
 	private XACMLAuthzDecisionQueryEndpoint endpoint;
 	private PolicyDecisionPoint pdp;
+	private SigningCredentialSelector credentialSelector;
 	private IMocksControl control;
 
 	private static PrivateKey spPrivateKey;
@@ -97,7 +101,8 @@ public class XACMLAuthzMultipleMetadataProvidersTest
 	{
 		this.control = EasyMock.createControl();
 		this.pdp = control.createMock(PolicyDecisionPoint.class);
-		this.endpoint = new XACMLAuthzDecisionQueryEndpoint(idpConfiguration, pdp);
+		this.credentialSelector = control.createMock("credentialSelector", SigningCredentialSelector.class);
+		this.endpoint = new XACMLAuthzDecisionQueryEndpoint(idpConfiguration, pdp, credentialSelector);
 	}
 
 	@Test
@@ -110,7 +115,7 @@ public class XACMLAuthzMultipleMetadataProvidersTest
 		Response response = endpoint.handle(xacmlSamlQuery);
 		control.verify();
 
-		assertThat(response, notNullValue());
+		assertThat(response, is(notNullValue()));
 		assertThat(response.getStatus().getStatusCode().getValue(), is(StatusCode.REQUESTER_URI));
 	}
 
@@ -126,6 +131,9 @@ public class XACMLAuthzMultipleMetadataProvidersTest
 				.builder()
 				.result(createIndeterminateProcessingError())
 				.build());
+		Credential expectedSigningCredential = idpConfiguration.getSigningCredentials().get(0);
+		expect(credentialSelector.selectCredential(same(xacmlSamlQuery), anyObject(Response.class),
+			same(idpConfiguration))).andReturn(expectedSigningCredential);
 
 		control.replay();
 		Response response = endpoint.handle(xacmlSamlQuery);
@@ -133,6 +141,7 @@ public class XACMLAuthzMultipleMetadataProvidersTest
 
 		assertThat(response, notNullValue());
 		assertThat(response.getStatus().getStatusCode().getValue(), is(StatusCode.SUCCESS_URI));
+		assertThat(response.getSignature().getSigningCredential(), is(expectedSigningCredential));
 	}
 
 	@Test
@@ -147,14 +156,21 @@ public class XACMLAuthzMultipleMetadataProvidersTest
 				query.getDocumentElement());
 		Capture<RequestContext> captureRequest = new Capture<RequestContext>();
 		expect(pdp.decide(capture(captureRequest))).andReturn(ResponseContext
-				.builder()
-				.result(createIndeterminateProcessingError())
-				.build());
-		control.replay();
-		Response response1 = endpoint.handle(xacmlSamlQuery);
+			.builder()
+			.result(createIndeterminateProcessingError())
+			.build());
+		Credential expectedSigningCredential = idpConfiguration.getSigningCredentials().get(0);
+		expect(credentialSelector.selectCredential(same(xacmlSamlQuery), anyObject(Response.class),
+				same(idpConfiguration))).andReturn(expectedSigningCredential);
 
-		assertThat(response1, notNullValue());
-		assertThat(response1.getStatus().getStatusCode().getValue(), is(StatusCode.SUCCESS_URI));
+		control.replay();
+		Response response = endpoint.handle(xacmlSamlQuery);
+
+		assertThat(response, is(notNullValue()));
+		assertThat(response.getStatus().getStatusCode().getValue(), is(StatusCode.SUCCESS_URI));
+		log.debug("Response signature credential: {}", response.getSignature().getSigningCredential());
+		log.debug("Expected signing credential: {}", expectedSigningCredential);
+		assertThat(response.getSignature().getSigningCredential(), is(expectedSigningCredential));
 
 		control.verify();
 	}

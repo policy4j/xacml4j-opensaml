@@ -22,28 +22,30 @@
   -->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:p="http://www.springframework.org/schema/p"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:c="http://www.springframework.org/schema/c"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<bean id="idpMetadata" class="org.xacml4j.opensaml.OpenSamlMetadataFactoryBean"
-		  p:location="classpath:metadata.xml"/>
+		  p:location="classpath:metadata.xml" />
 
-	<bean id="idpConfig" class="org.xacml4j.opensaml.DefaultIDPConfiguration">
-		<constructor-arg value="https://idp.example.com/"/>
-		<constructor-arg ref="idpMetadata"/>
-		<constructor-arg>
-			<bean class="org.opensaml.xml.security.x509.KeyStoreX509CredentialAdapter">
-				<constructor-arg>
-					<bean class="org.xacml4j.opensaml.KeyStoreFactory"
-						p:password="changeme"
-						p:location="test-idp.jceks"
-						p:type="JCEKS"
-						/>
-				</constructor-arg>
-				<constructor-arg value="mykey"/>
-				<constructor-arg value="changeme"/>
-			</bean>
+	<bean id="idpConfig" class="org.xacml4j.opensaml.DefaultIDPConfiguration"
+			c:localEntityId="https://idp.example.com/"
+			c:metadata-ref="idpMetadata">
+		<constructor-arg name="idpSigningCredentials">
+			<list>
+				<bean class="org.opensaml.xml.security.x509.KeyStoreX509CredentialAdapter"
+						c:alias="mykey" c:password="changeme">
+					<constructor-arg name="store">
+						<bean class="org.xacml4j.opensaml.KeyStoreFactory"
+							  p:password="changeme"
+							  p:location="test-idp.jceks"
+							  p:type="JCEKS"
+								/>
+					</constructor-arg>
+				</bean>
+			</list>
 		</constructor-arg>
 	</bean>
 </beans>

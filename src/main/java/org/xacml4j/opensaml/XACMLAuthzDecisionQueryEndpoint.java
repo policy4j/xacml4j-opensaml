@@ -22,6 +22,8 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +50,7 @@ import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.security.CriteriaSet;
 import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.security.SecurityHelper;
+import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.credential.UsageType;
 import org.opensaml.xml.security.criteria.EntityIDCriteria;
 import org.opensaml.xml.security.criteria.UsageCriteria;
@@ -79,6 +82,7 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 	private final IDPConfiguration idpConfig;
 
 	private final PolicyDecisionPoint pdp;
+	private final SigningCredentialSelector credentialSelector;
 	private final Xacml20RequestContextUnmarshaller xacmlRequest20Unmarshaller;
 	private final Xacml20ResponseContextMarshaller xacmlResponse20Unmarshaller;
 
@@ -86,11 +90,18 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 
 	private boolean requireSignatureValidation;
 
+	@Deprecated
 	public XACMLAuthzDecisionQueryEndpoint(
 			IDPConfiguration idpConfig,
 			PolicyDecisionPoint pdp) {
-		this.idpConfig = idpConfig;
-		this.pdp = pdp;
+		this(idpConfig, pdp, null);
+	}
+
+	public XACMLAuthzDecisionQueryEndpoint(IDPConfiguration idpConfig, PolicyDecisionPoint pdp,
+			SigningCredentialSelector credentialSelector) {
+		this.idpConfig = checkNotNull(idpConfig, "'idpConfig' is null.");
+		this.pdp = checkNotNull(pdp, "'pdp' is null.");
+		this.credentialSelector = checkNotNull(credentialSelector, "'credentialSelector' is null.");
 
 		xacmlRequest20Unmarshaller = new Xacml20RequestContextUnmarshaller();
 		xacmlResponse20Unmarshaller = new Xacml20ResponseContextMarshaller();
@@ -147,7 +158,7 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 					xacml20DecisionQuery.isReturnContext() ? xacmlRequest : null, xacmlResponse);
 			Response samlResponse = OpenSamlObjectBuilder.makeXacml20AuthzDecisionQueryResponse(
 					idpConfig.getLocalEntity().getEntityID(), xacml20DecisionQuery, assertion);
-			signResponse(samlResponse);
+			signResponse(request, samlResponse);
 			return samlResponse;
 		} catch (Exception e) {
 			log.error("Caught exception while processing XacmlAuthDecisionQuery", e);
@@ -227,17 +238,20 @@ public class XACMLAuthzDecisionQueryEndpoint implements OpenSamlEndpoint {
 		}
 	}
 
-	private void signResponse(Response response) throws SecurityException, MarshallingException, SignatureException {
+	private void signResponse(RequestAbstractType request, Response response)
+			throws SecurityException, MarshallingException, SignatureException {
+		Credential signingCredential = credentialSelector.selectCredential(request, response, idpConfig);
+
 		Signature dsig = (Signature) Configuration
 				.getBuilderFactory()
 				.getBuilder(Signature.DEFAULT_ELEMENT_NAME)
 				.buildObject(Signature.DEFAULT_ELEMENT_NAME);
-
-		dsig.setSigningCredential(idpConfig.getSigningCredential());
+		dsig.setSigningCredential(signingCredential);
 		dsig.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
 		dsig.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
 		response.setSignature(dsig);
-		SecurityHelper.prepareSignatureParams(dsig, idpConfig.getSigningCredential(), null, null);
+
+		SecurityHelper.prepareSignatureParams(dsig, signingCredential, null, null);
 		Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
 		Signer.signObject(dsig);
 	}
