@@ -1,4 +1,4 @@
-package org.xacml4j.saml;
+package org.xacml4j.opensaml;
 
 /*
  * #%L

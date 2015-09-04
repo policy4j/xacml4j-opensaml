@@ -22,6 +22,11 @@ package org.xacml4j.opensaml;
  * #L%
  */
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.List;
+
 import org.opensaml.saml2.metadata.AuthzService;
 import org.opensaml.saml2.metadata.EntityDescriptor;
 import org.opensaml.saml2.metadata.PDPDescriptor;
@@ -36,6 +41,7 @@ import org.opensaml.xml.signature.impl.ExplicitKeySignatureTrustEngine;
 import org.opensaml.xml.util.DatatypeHelper;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class DefaultIDPConfiguration implements IDPConfiguration
 {
@@ -43,20 +49,29 @@ public class DefaultIDPConfiguration implements IDPConfiguration
 
 	private final EntityDescriptor localEntity;
 	private final SignatureTrustEngine trustEngine;
-	private final Credential idpSigningCredential;
+	private final List<Credential> idpSigningCredentials;
 
 	public DefaultIDPConfiguration(String localEntityId,
 			MetadataProvider metadata,
-			Credential idpSigningCredential)
-		throws MetadataProviderException
-	{
-		Preconditions.checkNotNull(localEntityId);
-		Preconditions.checkNotNull(metadata);
-		Preconditions.checkNotNull(idpSigningCredential);
+			List<Credential> idpSigningCredentials)
+		throws MetadataProviderException {
+		checkNotNull(localEntityId, "'localEntityId' is null.");
+		checkNotNull(metadata, "'metadata' is null.");
+		checkNotNull(idpSigningCredentials, "'idpSigningCredentials' is null.");
+		checkArgument(!idpSigningCredentials.isEmpty(), "'idpSigningCredentials' is empty.");
 		this.localEntity = metadata.getEntityDescriptor(localEntityId);
 		Preconditions.checkState(localEntity != null);
 		this.trustEngine = createDefaultSignatureTrustEngine(metadata);
-		this.idpSigningCredential = idpSigningCredential;
+		this.idpSigningCredentials = idpSigningCredentials;
+	}
+
+	/**
+	 * @deprecated see {@link #DefaultIDPConfiguration(String, MetadataProvider, List)}
+	 */
+	@Deprecated
+	public DefaultIDPConfiguration(String localEntityId, MetadataProvider metadata,
+			Credential idpSigningCredential) throws MetadataProviderException {
+		this(localEntityId, metadata, ImmutableList.of(idpSigningCredential));
 	}
 
 	@Override
@@ -85,9 +100,15 @@ public class DefaultIDPConfiguration implements IDPConfiguration
 	}
 
 	@Override
+	@Deprecated
 	public Credential getSigningCredential()
 	{
-		return idpSigningCredential;
+		return idpSigningCredentials.get(0);
+	}
+
+	@Override
+	public List<Credential> getSigningCredentials() {
+		return idpSigningCredentials;
 	}
 
 	private static SignatureTrustEngine createDefaultSignatureTrustEngine(MetadataProvider metadata)

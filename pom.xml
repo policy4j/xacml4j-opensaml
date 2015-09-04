@@ -13,7 +13,7 @@
 	<name>XACML/OpenSAML Integration</name>
 
 	<properties>
-		<spring.version>3.0.7.RELEASE</spring.version>
+		<spring.version>3.2.7.RELEASE</spring.version>
 		<license.licenseName>lgpl_v3</license.licenseName>
 	</properties>
 
@@ -85,6 +85,12 @@
 			<groupId>org.easymock</groupId>
 			<artifactId>easymock</artifactId>
 			<version>3.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.10.19</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
